@@ -2,7 +2,7 @@
 
 A free, open-source mobile-first financial dashboard for your morning briefing. Track stocks, crypto, commodities, and your personal portfolio — all in one clean dark-mode web app you can install on your iPhone or Android home screen.
 
-**Live at [your-deployed-url.com](https://your-deployed-url.com)**
+**Deploy your own instance in one click — see [Deploy Your Own](#deploy-your-own) below.**
 
 ---
 
