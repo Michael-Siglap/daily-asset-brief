@@ -26,6 +26,7 @@ A free, open-source mobile-first financial dashboard for your morning briefing. 
 | Language | TypeScript |
 | Styling | Tailwind CSS |
 | Data | [yahoo-finance2 v3](https://github.com/gadicc/yahoo-finance2) |
+| Runtime | [Bun](https://bun.sh) |
 | State | React Context + localStorage |
 | Deployment | [Vercel](https://vercel.com) |
 
@@ -35,16 +36,15 @@ A free, open-source mobile-first financial dashboard for your morning briefing. 
 
 ### Prerequisites
 
-- Node.js 18+
-- npm or yarn
+- [Bun](https://bun.sh) — install with `curl -fsSL https://bun.sh/install | bash`
 
 ### Installation
 
 ```bash
 git clone https://github.com/Michael-Siglap/daily-asset-brief.git
 cd daily-asset-brief
-npm install
-npm run dev
+bun install
+bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
@@ -54,8 +54,8 @@ No `.env` file needed — there are no API keys.
 ### Build for Production
 
 ```bash
-npm run build
-npm start
+bun run build
+bun start
 ```
 
 ---
@@ -78,7 +78,7 @@ No environment variables required.
 
 **iPhone / iPad:**
 
-1. Open `your-deployed-url.com` in Safari
+1. Open your deployed URL in Safari
 2. Tap the Share button → **Add to Home Screen**
 3. Tap **Add** — it launches fullscreen with a black status bar
 
