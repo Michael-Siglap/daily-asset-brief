@@ -1,15 +1,16 @@
-import type { Metadata, Viewport } from "next";
-import { Geist_Mono } from "next/font/google";
-import "./globals.css";
 import BottomNav from "@/components/BottomNav";
 import { PortfolioProvider } from "@/context/PortfolioContext";
 import { SettingsProvider } from "@/context/SettingsContext";
+import type { Metadata, Viewport } from "next";
+import { Geist_Mono } from "next/font/google";
+import "./globals.css";
 
 const mono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" });
 
 export const metadata: Metadata = {
   title: "Daily Asset Brief",
-  description: "Your personalized morning briefing for stocks, crypto, commodities & more",
+  description:
+    "Your personalized morning briefing for stocks, crypto, commodities & more",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -30,10 +31,16 @@ export const viewport: Viewport = {
   themeColor: "#09090b",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en" className="dark">
-      <body className={`${mono.variable} font-mono bg-zinc-950 dark:bg-zinc-950 light:bg-gray-50 text-white dark:text-white light:text-gray-900 antialiased`}>
+      <body
+        className={`${mono.variable} font-mono bg-zinc-950 dark:bg-zinc-950 light:bg-gray-50 text-white dark:text-white light:text-gray-900 antialiased`}
+      >
         <SettingsProvider>
           <PortfolioProvider>
             <main className="min-h-screen max-w-lg mx-auto pb-24">

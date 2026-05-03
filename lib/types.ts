@@ -21,7 +21,7 @@ export interface FundamentalsData {
   payoutRatio: number | null;
   peRatio: number | null;
   pbRatio: number | null;
-  currentRatio: number | null;       // assets / liabilities
+  currentRatio: number | null; // assets / liabilities
   debtToEquity: number | null;
   epsTrailing: number | null;
   revenueGrowth: number | null;

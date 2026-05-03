@@ -1,6 +1,6 @@
 "use client";
-import React, { createContext, useContext, useEffect, useState } from "react";
 import type { AppSettings } from "@/lib/types";
+import React, { createContext, useContext, useEffect, useState } from "react";
 
 const DEFAULTS: AppSettings = {
   theme: "dark",
@@ -14,7 +14,9 @@ interface SettingsContextValue {
   settings: AppSettings;
   updateSettings: (updates: Partial<AppSettings>) => void;
   setTheme: (theme: AppSettings["theme"]) => void;
-  setAutoRefreshInterval: (interval: AppSettings["autoRefreshInterval"]) => void;
+  setAutoRefreshInterval: (
+    interval: AppSettings["autoRefreshInterval"],
+  ) => void;
   setCurrency: (currency: AppSettings["currency"]) => void;
 }
 
@@ -50,13 +52,16 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <SettingsContext.Provider value={{
-      settings,
-      updateSettings,
-      setTheme: (theme) => updateSettings({ theme }),
-      setAutoRefreshInterval: (autoRefreshInterval) => updateSettings({ autoRefreshInterval }),
-      setCurrency: (currency) => updateSettings({ currency }),
-    }}>
+    <SettingsContext.Provider
+      value={{
+        settings,
+        updateSettings,
+        setTheme: (theme) => updateSettings({ theme }),
+        setAutoRefreshInterval: (autoRefreshInterval) =>
+          updateSettings({ autoRefreshInterval }),
+        setCurrency: (currency) => updateSettings({ currency }),
+      }}
+    >
       {children}
     </SettingsContext.Provider>
   );

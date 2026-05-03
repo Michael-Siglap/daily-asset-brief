@@ -1,6 +1,6 @@
 "use client";
-import { useEffect, useState, useCallback } from "react";
 import type { QuoteData } from "@/lib/types";
+import { useCallback, useEffect, useState } from "react";
 
 export function useQuotes(symbols?: string[], refreshInterval?: number) {
   const [data, setData] = useState<QuoteData[]>([]);
@@ -22,9 +22,11 @@ export function useQuotes(symbols?: string[], refreshInterval?: number) {
     } finally {
       setLoading(false);
     }
-  }, [symbols?.join(",")]);  // eslint-disable-line
+  }, [symbols?.join(",")]); // eslint-disable-line
 
-  useEffect(() => { fetch_(); }, [fetch_]);
+  useEffect(() => {
+    fetch_();
+  }, [fetch_]);
 
   useEffect(() => {
     if (!refreshInterval || refreshInterval <= 0) return;
@@ -36,7 +38,9 @@ export function useQuotes(symbols?: string[], refreshInterval?: number) {
 }
 
 export function useFundamentals(symbol: string | null) {
-  const [data, setData] = useState<import("@/lib/types").FundamentalsData | null>(null);
+  const [data, setData] = useState<
+    import("@/lib/types").FundamentalsData | null
+  >(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -52,7 +56,10 @@ export function useFundamentals(symbol: string | null) {
   return { data, loading };
 }
 
-export function useNews(symbols: string[], mode: "portfolio" | "market" = "portfolio") {
+export function useNews(
+  symbols: string[],
+  mode: "portfolio" | "market" = "portfolio",
+) {
   const [data, setData] = useState<import("@/lib/types").NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -64,13 +71,16 @@ export function useNews(symbols: string[], mode: "portfolio" | "market" = "portf
       .then(setData)
       .catch(() => setData([]))
       .finally(() => setLoading(false));
-  }, [symbols.join(","), mode]);  // eslint-disable-line
+  }, [symbols.join(","), mode]); // eslint-disable-line
 
   return { data, loading };
 }
 
 export function useMovers() {
-  const [data, setData] = useState<{ gainers: QuoteData[]; losers: QuoteData[] }>({ gainers: [], losers: [] });
+  const [data, setData] = useState<{
+    gainers: QuoteData[];
+    losers: QuoteData[];
+  }>({ gainers: [], losers: [] });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

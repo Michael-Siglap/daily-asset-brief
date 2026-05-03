@@ -1,6 +1,6 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
 import type { HistoricalBar } from "@/lib/types";
+import { useEffect, useRef, useState } from "react";
 
 interface Props {
   symbol: string;
@@ -8,7 +8,7 @@ interface Props {
 }
 
 const RANGES = ["1d", "5d", "1mo", "3mo", "6mo", "1y"] as const;
-type Range = typeof RANGES[number];
+type Range = (typeof RANGES)[number];
 
 export default function PriceChart({ symbol, isDark = true }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -34,78 +34,91 @@ export default function PriceChart({ symbol, isDark = true }: Props) {
     let chart: import("lightweight-charts").IChartApi | null = null;
     let destroyed = false;
 
-    import("lightweight-charts").then(({ createChart, ColorType, LineStyle, AreaSeries, CandlestickSeries }) => {
-      if (destroyed || !containerRef.current) return;
+    import("lightweight-charts").then(
+      ({
+        createChart,
+        ColorType,
+        LineStyle,
+        AreaSeries,
+        CandlestickSeries,
+      }) => {
+        if (destroyed || !containerRef.current) return;
 
-      const bg = isDark ? "#09090b" : "#ffffff";
-      const textColor = isDark ? "#a1a1aa" : "#52525b";
-      const borderColor = isDark ? "#27272a" : "#e4e4e7";
-      const upColor = "#10b981";
-      const downColor = "#ef4444";
+        const bg = isDark ? "#09090b" : "#ffffff";
+        const textColor = isDark ? "#a1a1aa" : "#52525b";
+        const borderColor = isDark ? "#27272a" : "#e4e4e7";
+        const upColor = "#10b981";
+        const downColor = "#ef4444";
 
-      chart = createChart(containerRef.current!, {
-        width: containerRef.current!.offsetWidth,
-        height: 200,
-        layout: {
-          background: { type: ColorType.Solid, color: bg },
-          textColor,
-        },
-        grid: {
-          vertLines: { color: borderColor, style: LineStyle.Dotted },
-          horzLines: { color: borderColor, style: LineStyle.Dotted },
-        },
-        rightPriceScale: { borderColor },
-        timeScale: { borderColor, timeVisible: true, secondsVisible: false },
-        crosshair: { mode: 1 },
-        handleScroll: true,
-        handleScale: true,
-      });
-
-      if (chartType === "line") {
-        const firstClose = bars[0]?.close ?? 0;
-        const lastClose = bars[bars.length - 1]?.close ?? 0;
-        const isUp = lastClose >= firstClose;
-        const lineColor = isUp ? upColor : downColor;
-
-        const series = chart.addSeries(AreaSeries, {
-          lineColor,
-          topColor: lineColor + "33",
-          bottomColor: lineColor + "05",
-          lineWidth: 2,
+        chart = createChart(containerRef.current!, {
+          width: containerRef.current!.offsetWidth,
+          height: 200,
+          layout: {
+            background: { type: ColorType.Solid, color: bg },
+            textColor,
+          },
+          grid: {
+            vertLines: { color: borderColor, style: LineStyle.Dotted },
+            horzLines: { color: borderColor, style: LineStyle.Dotted },
+          },
+          rightPriceScale: { borderColor },
+          timeScale: { borderColor, timeVisible: true, secondsVisible: false },
+          crosshair: { mode: 1 },
+          handleScroll: true,
+          handleScale: true,
         });
-        series.setData(bars.map((b) => ({ time: b.time as import("lightweight-charts").UTCTimestamp, value: b.close })));
-      } else {
-        const series = chart.addSeries(CandlestickSeries, {
-          upColor,
-          downColor,
-          borderUpColor: upColor,
-          borderDownColor: downColor,
-          wickUpColor: upColor,
-          wickDownColor: downColor,
-        });
-        series.setData(
-          bars.map((b) => ({
-            time: b.time as import("lightweight-charts").UTCTimestamp,
-            open: b.open,
-            high: b.high,
-            low: b.low,
-            close: b.close,
-          }))
-        );
-      }
 
-      chart.timeScale().fitContent();
+        if (chartType === "line") {
+          const firstClose = bars[0]?.close ?? 0;
+          const lastClose = bars[bars.length - 1]?.close ?? 0;
+          const isUp = lastClose >= firstClose;
+          const lineColor = isUp ? upColor : downColor;
 
-      // Responsive resize
-      const ro = new ResizeObserver(() => {
-        if (chart && containerRef.current) {
-          chart.resize(containerRef.current.offsetWidth, 200);
+          const series = chart.addSeries(AreaSeries, {
+            lineColor,
+            topColor: lineColor + "33",
+            bottomColor: lineColor + "05",
+            lineWidth: 2,
+          });
+          series.setData(
+            bars.map((b) => ({
+              time: b.time as import("lightweight-charts").UTCTimestamp,
+              value: b.close,
+            })),
+          );
+        } else {
+          const series = chart.addSeries(CandlestickSeries, {
+            upColor,
+            downColor,
+            borderUpColor: upColor,
+            borderDownColor: downColor,
+            wickUpColor: upColor,
+            wickDownColor: downColor,
+          });
+          series.setData(
+            bars.map((b) => ({
+              time: b.time as import("lightweight-charts").UTCTimestamp,
+              open: b.open,
+              high: b.high,
+              low: b.low,
+              close: b.close,
+            })),
+          );
         }
-      });
-      if (containerRef.current) ro.observe(containerRef.current);
 
-      return () => ro.disconnect();
-    });
+        chart.timeScale().fitContent();
+
+        // Responsive resize
+        const ro = new ResizeObserver(() => {
+          if (chart && containerRef.current) {
+            chart.resize(containerRef.current.offsetWidth, 200);
+          }
+        });
+        if (containerRef.current) ro.observe(containerRef.current);
+
+        return () => ro.disconnect();
+      },
+    );
 
     return () => {
       destroyed = true;
@@ -133,7 +146,9 @@ export default function PriceChart({ symbol, isDark = true }: Props) {
           ))}
         </div>
         <button
-          onClick={() => setChartType((t) => (t === "line" ? "candle" : "line"))}
+          onClick={() =>
+            setChartType((t) => (t === "line" ? "candle" : "line"))
+          }
           className="text-zinc-500 dark:text-zinc-500 hover:text-zinc-300 dark:hover:text-zinc-300 text-xs px-2 py-0.5 rounded transition-colors"
         >
           {chartType === "line" ? "Candles" : "Line"}
@@ -148,7 +163,11 @@ export default function PriceChart({ symbol, isDark = true }: Props) {
           No chart data
         </div>
       ) : (
-        <div ref={containerRef} className="rounded-lg overflow-hidden" style={{ height: 200 }} />
+        <div
+          ref={containerRef}
+          className="rounded-lg overflow-hidden"
+          style={{ height: 200 }}
+        />
       )}
     </div>
   );

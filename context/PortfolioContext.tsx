@@ -1,6 +1,6 @@
 "use client";
-import React, { createContext, useContext, useEffect, useState } from "react";
 import type { PortfolioHolding, WatchlistItem } from "@/lib/types";
+import React, { createContext, useContext, useEffect, useState } from "react";
 
 interface PortfolioContextValue {
   holdings: PortfolioHolding[];
@@ -50,7 +50,9 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
   }
 
   function updateHolding(symbol: string, updates: Partial<PortfolioHolding>) {
-    persist(holdings.map((h) => (h.symbol === symbol ? { ...h, ...updates } : h)));
+    persist(
+      holdings.map((h) => (h.symbol === symbol ? { ...h, ...updates } : h)),
+    );
   }
 
   function addToWatchlist(item: WatchlistItem) {
@@ -63,7 +65,17 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <PortfolioContext.Provider value={{ holdings, addHolding, removeHolding, updateHolding, watchlist, addToWatchlist, removeFromWatchlist }}>
+    <PortfolioContext.Provider
+      value={{
+        holdings,
+        addHolding,
+        removeHolding,
+        updateHolding,
+        watchlist,
+        addToWatchlist,
+        removeFromWatchlist,
+      }}
+    >
       {children}
     </PortfolioContext.Provider>
   );
@@ -71,6 +83,7 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
 
 export function usePortfolio() {
   const ctx = useContext(PortfolioContext);
-  if (!ctx) throw new Error("usePortfolio must be used within PortfolioProvider");
+  if (!ctx)
+    throw new Error("usePortfolio must be used within PortfolioProvider");
   return ctx;
 }
