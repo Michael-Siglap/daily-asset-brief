@@ -3,6 +3,7 @@ import { Geist_Mono } from "next/font/google";
 import "./globals.css";
 import BottomNav from "@/components/BottomNav";
 import { PortfolioProvider } from "@/context/PortfolioContext";
+import { SettingsProvider } from "@/context/SettingsContext";
 
 const mono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" });
 
@@ -32,13 +33,15 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="dark">
-      <body className={`${mono.variable} font-mono bg-zinc-950 text-white antialiased`}>
-        <PortfolioProvider>
-          <main className="min-h-screen max-w-lg mx-auto pb-24">
-            {children}
-          </main>
-          <BottomNav />
-        </PortfolioProvider>
+      <body className={`${mono.variable} font-mono bg-zinc-950 dark:bg-zinc-950 light:bg-gray-50 text-white dark:text-white light:text-gray-900 antialiased`}>
+        <SettingsProvider>
+          <PortfolioProvider>
+            <main className="min-h-screen max-w-lg mx-auto pb-24">
+              {children}
+            </main>
+            <BottomNav />
+          </PortfolioProvider>
+        </SettingsProvider>
       </body>
     </html>
   );

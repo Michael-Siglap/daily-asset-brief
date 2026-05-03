@@ -1,10 +1,12 @@
 "use client";
 import { useState } from "react";
 import { useQuotes, useMovers } from "@/hooks/useQuotes";
+import { useSettings } from "@/context/SettingsContext";
 import { DEFAULT_WATCHLIST } from "@/lib/defaults";
 import { formatCurrency, formatPercent, colorForChange } from "@/lib/utils";
 import AssetCard from "@/components/AssetCard";
 import FundamentalsPanel from "@/components/FundamentalsPanel";
+import SearchModal from "@/components/SearchModal";
 import { SkeletonRow, SkeletonCard } from "@/components/LoadingSkeleton";
 
 const TABS = ["Overview", "Gainers", "Losers"] as const;
@@ -13,9 +15,11 @@ type Tab = typeof TABS[number];
 export default function MarketPage() {
   const [tab, setTab] = useState<Tab>("Overview");
   const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
+  const [showSearch, setShowSearch] = useState(false);
+  const { settings } = useSettings();
 
   const allSymbols = DEFAULT_WATCHLIST.map((d) => d.symbol);
-  const { data: quotes, loading: quotesLoading } = useQuotes(allSymbols);
+  const { data: quotes, loading: quotesLoading } = useQuotes(allSymbols, settings.autoRefreshInterval);
   const { data: movers, loading: moversLoading } = useMovers();
 
   const indices = quotes.filter((q) => q.category === "index");
@@ -25,7 +29,18 @@ export default function MarketPage() {
 
   return (
     <div className="px-4 pt-10">
-      <h1 className="text-white text-2xl font-bold mb-6">Market 📊</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-white dark:text-white light:text-gray-900 text-2xl font-bold">Market 📊</h1>
+        <button
+          onClick={() => setShowSearch(true)}
+          className="p-2 rounded-xl bg-zinc-800 dark:bg-zinc-800 light:bg-gray-100 text-zinc-400 hover:text-white dark:hover:text-white light:hover:text-gray-900 transition-colors"
+          title="Search assets"
+        >
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
+          </svg>
+        </button>
+      </div>
 
       {/* Tabs */}
       <div className="flex gap-1 bg-zinc-900 rounded-xl p-1 mb-6">
@@ -134,6 +149,9 @@ export default function MarketPage() {
 
       {selectedSymbol && (
         <FundamentalsPanel symbol={selectedSymbol} onClose={() => setSelectedSymbol(null)} />
+      )}
+      {showSearch && (
+        <SearchModal onClose={() => setShowSearch(false)} onViewFundamentals={(sym) => setSelectedSymbol(sym)} />
       )}
     </div>
   );

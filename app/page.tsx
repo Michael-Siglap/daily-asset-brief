@@ -1,18 +1,23 @@
 "use client";
 import { useState, useMemo } from "react";
+import Link from "next/link";
 import { usePortfolio } from "@/context/PortfolioContext";
+import { useSettings } from "@/context/SettingsContext";
 import { useQuotes, useNews } from "@/hooks/useQuotes";
 import { DEFAULT_WATCHLIST } from "@/lib/defaults";
 import { formatCurrency, formatPercent, colorForChange } from "@/lib/utils";
 import AssetCard from "@/components/AssetCard";
 import NewsCard from "@/components/NewsCard";
 import FundamentalsPanel from "@/components/FundamentalsPanel";
+import SearchModal from "@/components/SearchModal";
 import { SkeletonCard, SkeletonNews } from "@/components/LoadingSkeleton";
 import type { HoldingWithValue } from "@/lib/types";
 
 export default function DashboardPage() {
   const { holdings } = usePortfolio();
+  const { settings } = useSettings();
   const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
+  const [showSearch, setShowSearch] = useState(false);
 
   const allSymbols = useMemo(() => {
     const defaults = DEFAULT_WATCHLIST.map((d) => d.symbol);
@@ -21,7 +26,7 @@ export default function DashboardPage() {
   }, [holdings]);
 
   const portfolioSymbols = holdings.map((h) => h.symbol);
-  const { data: quotes, loading: quotesLoading } = useQuotes(allSymbols);
+  const { data: quotes, loading: quotesLoading, lastUpdated } = useQuotes(allSymbols, settings.autoRefreshInterval);
   const { data: news, loading: newsLoading } = useNews(
     portfolioSymbols.length > 0 ? portfolioSymbols : DEFAULT_WATCHLIST.slice(0, 5).map((d) => d.symbol),
     portfolioSymbols.length > 0 ? "portfolio" : "market"
@@ -53,11 +58,43 @@ export default function DashboardPage() {
   const crypto = quotes.filter((q) => q.category === "crypto");
   const commodities = quotes.filter((q) => q.category === "commodity");
 
+  function timeAgo(date: Date) {
+    const secs = Math.floor((Date.now() - date.getTime()) / 1000);
+    if (secs < 60) return `${secs}s ago`;
+    return `${Math.floor(secs / 60)}m ago`;
+  }
+
   return (
     <div className="px-4 pt-10 space-y-6">
-      <div>
-        <p className="text-zinc-500 text-xs">{today}</p>
-        <h1 className="text-white text-2xl font-bold mt-0.5">Morning Brief ⚡</h1>
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-zinc-500 text-xs">{today}</p>
+          <h1 className="text-white dark:text-white light:text-gray-900 text-2xl font-bold mt-0.5">Morning Brief ⚡</h1>
+          {lastUpdated && (
+            <p className="text-zinc-600 text-xs mt-0.5">Updated {timeAgo(lastUpdated)}</p>
+          )}
+        </div>
+        <div className="flex items-center gap-2 pt-1">
+          <button
+            onClick={() => setShowSearch(true)}
+            className="p-2 rounded-xl bg-zinc-800 dark:bg-zinc-800 light:bg-gray-100 text-zinc-400 hover:text-white dark:hover:text-white light:hover:text-gray-900 transition-colors"
+            title="Search assets"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
+            </svg>
+          </button>
+          <Link
+            href="/settings"
+            className="p-2 rounded-xl bg-zinc-800 dark:bg-zinc-800 light:bg-gray-100 text-zinc-400 hover:text-white dark:hover:text-white light:hover:text-gray-900 transition-colors"
+            title="Settings"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </Link>
+        </div>
       </div>
 
       {/* Portfolio Summary Card */}
@@ -163,6 +200,9 @@ export default function DashboardPage() {
 
       {selectedSymbol && (
         <FundamentalsPanel symbol={selectedSymbol} onClose={() => setSelectedSymbol(null)} />
+      )}
+      {showSearch && (
+        <SearchModal onClose={() => setShowSearch(false)} onViewFundamentals={(sym) => setSelectedSymbol(sym)} />
       )}
     </div>
   );

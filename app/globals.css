@@ -5,6 +5,13 @@
   --foreground: #fafafa;
 }
 
+.light {
+  --background: #ffffff;
+  --foreground: #09090b;
+}
+
+@custom-variant light (.light &);
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

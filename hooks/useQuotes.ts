@@ -2,10 +2,11 @@
 import { useEffect, useState, useCallback } from "react";
 import type { QuoteData } from "@/lib/types";
 
-export function useQuotes(symbols?: string[]) {
+export function useQuotes(symbols?: string[], refreshInterval?: number) {
   const [data, setData] = useState<QuoteData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   const fetch_ = useCallback(async () => {
     setLoading(true);
@@ -15,6 +16,7 @@ export function useQuotes(symbols?: string[]) {
       const res = await fetch(`/api/quotes${qs}`);
       if (!res.ok) throw new Error("Failed");
       setData(await res.json());
+      setLastUpdated(new Date());
     } catch (e) {
       setError(String(e));
     } finally {
@@ -24,7 +26,13 @@ export function useQuotes(symbols?: string[]) {
 
   useEffect(() => { fetch_(); }, [fetch_]);
 
-  return { data, loading, error, refetch: fetch_ };
+  useEffect(() => {
+    if (!refreshInterval || refreshInterval <= 0) return;
+    const id = setInterval(fetch_, refreshInterval);
+    return () => clearInterval(id);
+  }, [fetch_, refreshInterval]);
+
+  return { data, loading, error, refetch: fetch_, lastUpdated };
 }
 
 export function useFundamentals(symbol: string | null) {

@@ -61,3 +61,32 @@ export interface HoldingWithValue extends PortfolioHolding {
   pnlPercent: number | null;
   changePercent: number | null;
 }
+
+export interface WatchlistItem {
+  symbol: string;
+  name: string;
+  category: string;
+  addedAt: string;
+}
+
+export interface AppSettings {
+  theme: "dark" | "light" | "system";
+  autoRefreshInterval: 0 | 30000 | 60000 | 300000;
+  currency: "USD" | "EUR" | "GBP" | "JPY";
+}
+
+export interface HistoricalBar {
+  time: number; // Unix timestamp (seconds)
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+}
+
+export interface SearchResult {
+  symbol: string;
+  name: string;
+  exchange: string;
+  quoteType: string;
+}
