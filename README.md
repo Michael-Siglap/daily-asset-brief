@@ -1,36 +1,161 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Daily Asset Brief ⚡
+
+A free, open-source mobile-first financial dashboard for your morning briefing. Track stocks, crypto, commodities, and your personal portfolio — all in one clean dark-mode web app you can install on your iPhone or Android home screen.
+
+**Live at [your-deployed-url.com](https://your-deployed-url.com)**
+
+---
+
+## Features
+
+- **Morning Brief** — Daily snapshot of indices, stocks, crypto, and commodities with live prices and % change
+- **Portfolio Tracker** — Add your holdings with purchase price and quantity; see real-time P&L, cost basis, and total value
+- **Fundamentals Panel** — Tap any asset to see dividend yield, ex-dividend date, payout ratio, assets/liabilities ratio, P/E, debt/equity, free cash flow, profit margins, and more
+- **News Feed** — Toggle between portfolio-specific news and broad market news
+- **Top Movers** — Live gainers and losers across stocks, crypto, and commodities
+- **No API Key Required** — Powered entirely by Yahoo Finance (free, no signup)
+- **PWA Ready** — Install to your iPhone or Android home screen like a native app
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+| --- | --- |
+| Framework | [Next.js 16](https://nextjs.org) (App Router, Turbopack) |
+| Language | TypeScript |
+| Styling | Tailwind CSS |
+| Data | [yahoo-finance2 v3](https://github.com/gadicc/yahoo-finance2) |
+| State | React Context + localStorage |
+| Deployment | [Vercel](https://vercel.com) |
+
+---
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18+
+- npm or yarn
+
+### Installation
 
 ```bash
+git clone https://github.com/Michael-Siglap/daily-asset-brief.git
+cd daily-asset-brief
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+No `.env` file needed — there are no API keys.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Build for Production
 
-## Learn More
+```bash
+npm run build
+npm start
+```
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deploy Your Own
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The fastest way is Vercel:
 
-## Deploy on Vercel
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Michael-Siglap/daily-asset-brief)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. Click the button above
+2. Vercel auto-detects Next.js — no config needed
+3. (Optional) Add a custom domain in **Settings → Domains**
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+No environment variables required.
+
+---
+
+## Install as a Mobile App (PWA)
+
+**iPhone / iPad:**
+
+1. Open `your-deployed-url.com` in Safari
+2. Tap the Share button → **Add to Home Screen**
+3. Tap **Add** — it launches fullscreen with a black status bar
+
+**Android:**
+
+1. Open in Chrome
+2. Tap the menu → **Add to Home Screen**
+
+---
+
+## Project Structure
+
+```text
+daily-asset-brief/
+├── app/
+│   ├── page.tsx              # Morning Brief dashboard
+│   ├── market/page.tsx       # Market overview + movers
+│   ├── portfolio/page.tsx    # Portfolio tracker
+│   ├── news/page.tsx         # News feed
+│   └── api/
+│       ├── quotes/           # Live prices
+│       ├── fundamentals/     # P/E, dividends, ratios
+│       ├── news/             # Yahoo Finance news
+│       └── movers/           # Top gainers & losers
+├── components/               # Reusable UI components
+├── context/                  # Portfolio state (localStorage)
+├── hooks/                    # Data fetching hooks
+└── lib/                      # Types, utils, default watchlist
+```
+
+---
+
+## Default Watchlist
+
+Out of the box the app tracks:
+
+| Category | Symbols |
+| --- | --- |
+| Indices | S&P 500, NASDAQ, Dow Jones |
+| Stocks | AAPL, MSFT, NVDA, TSLA, AMZN |
+| Crypto | BTC, ETH, SOL |
+| Commodities | Gold, Crude Oil, Silver, Natural Gas |
+
+Users can add any Yahoo Finance-supported ticker to their personal portfolio.
+
+---
+
+## Contributing
+
+Contributions, bug reports, and feature ideas are very welcome. This project is intentionally kept simple so anyone can jump in and improve it — whether you're an experienced developer or vibe coding your way through with AI tools like Claude, Cursor, or Copilot.
+
+### Ideas for improvement
+
+- Price charts (sparklines or candlestick)
+- Dividend calendar view
+- Price alerts and push notifications
+- Forex and bond support
+- Dark/light mode toggle
+- Currency conversion for non-USD users
+- Watchlist customisation (add/remove from default list)
+- Better accessibility (screen reader support)
+
+### How to submit changes
+
+1. Fork the repo
+2. Create a branch: `git checkout -b my-feature`
+3. Make your changes and commit
+4. Push and open a Pull Request
+
+No strict style guide — keep it readable and mobile-friendly. If you're unsure about a change, open an issue first to discuss.
+
+---
+
+## License
+
+MIT — free to use, fork, remix, and build on for everyone's benefit.
+
+---
+
+Built with ❤️ by [Michael Siglap](https://github.com/Michael-Siglap) · Powered by Yahoo Finance · Hosted on Vercel
