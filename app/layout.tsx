@@ -1,5 +1,7 @@
 import BottomNav from "@/components/BottomNav";
+import FloatingTopBar from "@/components/FloatingTopBar";
 import GlobalModals from "@/components/GlobalModals";
+import LayoutContent from "@/components/LayoutContent";
 import Sidebar from "@/components/Sidebar";
 import { ToastContainer } from "@/components/Toast";
 import { PortfolioProvider } from "@/context/PortfolioContext";
@@ -53,12 +55,8 @@ export default function RootLayout({
               <PortfolioProvider>
                 <div className="flex min-h-screen">
                   <Sidebar />
-                  {/* Main content — offset by sidebar on md+ */}
-                  <div className="flex-1 min-w-0 md:ml-16 lg:ml-60">
-                    <main className="min-h-screen pb-20 md:pb-8">
-                      {children}
-                    </main>
-                  </div>
+                  <FloatingTopBar />
+                  <LayoutContent>{children}</LayoutContent>
                 </div>
                 <BottomNav />
                 <GlobalModals />

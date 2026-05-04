@@ -8,6 +8,8 @@ interface UIContextValue {
   activeSymbol: string | null;
   openFundamentals: (symbol: string) => void;
   closeFundamentals: () => void;
+  sidebarCollapsed: boolean;
+  toggleSidebar: () => void;
 }
 
 const UIContext = createContext<UIContextValue | null>(null);
@@ -15,11 +17,26 @@ const UIContext = createContext<UIContextValue | null>(null);
 export function UIProvider({ children }: { children: React.ReactNode }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [activeSymbol, setActiveSymbol] = useState<string | null>(null);
+  // Start false to avoid SSR mismatch; hydrate from localStorage on mount
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("dab_sidebar_collapsed");
+    if (stored === "true") setSidebarCollapsed(true);
+  }, []);
 
   const openSearch = useCallback(() => setSearchOpen(true), []);
   const closeSearch = useCallback(() => setSearchOpen(false), []);
   const openFundamentals = useCallback((symbol: string) => setActiveSymbol(symbol), []);
   const closeFundamentals = useCallback(() => setActiveSymbol(null), []);
+
+  const toggleSidebar = useCallback(() => {
+    setSidebarCollapsed((prev) => {
+      const next = !prev;
+      localStorage.setItem("dab_sidebar_collapsed", String(next));
+      return next;
+    });
+  }, []);
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -33,7 +50,13 @@ export function UIProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <UIContext.Provider value={{ searchOpen, openSearch, closeSearch, activeSymbol, openFundamentals, closeFundamentals }}>
+    <UIContext.Provider
+      value={{
+        searchOpen, openSearch, closeSearch,
+        activeSymbol, openFundamentals, closeFundamentals,
+        sidebarCollapsed, toggleSidebar,
+      }}
+    >
       {children}
     </UIContext.Provider>
   );
