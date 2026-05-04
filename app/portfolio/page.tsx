@@ -2,21 +2,23 @@
 import AddHoldingModal from "@/components/AddHoldingModal";
 import AllocationChart from "@/components/AllocationChart";
 import AssetCard from "@/components/AssetCard";
-import FundamentalsPanel from "@/components/FundamentalsPanel";
 import { usePortfolio } from "@/context/PortfolioContext";
 import { useSettings } from "@/context/SettingsContext";
+import { useToast } from "@/context/ToastContext";
+import { useUI } from "@/context/UIContext";
 import { useQuotes } from "@/hooks/useQuotes";
 import type { HoldingWithValue } from "@/lib/types";
 import { colorForChange, formatCurrency, formatPercent } from "@/lib/utils";
+import { Plus, Star } from "lucide-react";
 import { useMemo, useState } from "react";
 
 export default function PortfolioPage() {
-  const { holdings, removeHolding, watchlist, removeFromWatchlist } =
-    usePortfolio();
+  const { holdings, removeHolding, watchlist, removeFromWatchlist } = usePortfolio();
   const { settings } = useSettings();
+  const { toast } = useToast();
+  const { openFundamentals } = useUI();
   const [tab, setTab] = useState<"holdings" | "watchlist">("holdings");
   const [showAdd, setShowAdd] = useState(false);
-  const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
   const symbols = holdings.map((h) => h.symbol);
@@ -35,60 +37,49 @@ export default function PortfolioPage() {
     return holdings.map((h) => {
       const q = quoteMap[h.symbol];
       const currentPrice = q?.price ?? null;
-      const currentValue =
-        currentPrice != null ? currentPrice * h.quantity : null;
+      const currentValue = currentPrice != null ? currentPrice * h.quantity : null;
       const costBasis = h.purchasePrice * h.quantity;
       const pnl = currentValue != null ? currentValue - costBasis : null;
       const pnlPercent = pnl != null ? (pnl / costBasis) * 100 : null;
-      return {
-        ...h,
-        currentPrice,
-        currentValue,
-        costBasis,
-        pnl,
-        pnlPercent,
-        changePercent: q?.changePercent ?? null,
-      };
+      return { ...h, currentPrice, currentValue, costBasis, pnl, pnlPercent, changePercent: q?.changePercent ?? null };
     });
   }, [holdings, quotes]);
 
-  const totalValue = enriched.reduce(
-    (s, h) => s + (h.currentValue ?? h.costBasis),
-    0,
-  );
+  const totalValue = enriched.reduce((s, h) => s + (h.currentValue ?? h.costBasis), 0);
   const totalCost = enriched.reduce((s, h) => s + h.costBasis, 0);
   const totalPnl = totalValue - totalCost;
   const totalPnlPct = totalCost > 0 ? (totalPnl / totalCost) * 100 : 0;
 
   return (
-    <div className="px-4 pt-10">
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-white dark:text-white light:text-gray-900 text-2xl font-bold">
-          Portfolio 💼
-        </h1>
+    <div className="px-4 md:px-6 lg:px-8 pt-8 pb-4 max-w-6xl mx-auto">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-5">
+        <h1 className="text-white text-2xl font-bold">Portfolio</h1>
         <button
           onClick={() => setShowAdd(true)}
-          className="bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-xl px-4 py-2 transition-colors"
+          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-xl px-4 py-2.5 transition-colors"
         >
-          + Add
+          <Plus className="w-4 h-4" />
+          <span>Add</span>
         </button>
       </div>
 
       {/* Tab strip */}
-      <div className="flex gap-1 bg-zinc-800 dark:bg-zinc-800 light:bg-gray-100 rounded-xl p-1 mb-4">
+      <div className="flex gap-1 bg-zinc-800/60 rounded-xl p-1 mb-5">
         {(["holdings", "watchlist"] as const).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`flex-1 py-1.5 rounded-lg text-sm font-medium transition-colors capitalize ${
+            className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors capitalize flex items-center justify-center gap-2 ${
               tab === t
-                ? "bg-zinc-900 dark:bg-zinc-900 light:bg-white text-white dark:text-white light:text-gray-900 shadow"
-                : "text-zinc-400 dark:text-zinc-400 light:text-gray-500"
+                ? "bg-zinc-900 text-white shadow"
+                : "text-zinc-400 hover:text-zinc-200"
             }`}
           >
+            {t === "watchlist" && <Star className="w-3.5 h-3.5" />}
             {t}
             {t === "watchlist" && watchlist.length > 0 && (
-              <span className="ml-1.5 text-xs bg-zinc-700 dark:bg-zinc-700 light:bg-gray-200 text-zinc-400 dark:text-zinc-400 light:text-gray-500 px-1.5 py-0.5 rounded-full">
+              <span className="text-xs bg-zinc-700 text-zinc-400 px-1.5 py-0.5 rounded-full">
                 {watchlist.length}
               </span>
             )}
@@ -100,11 +91,11 @@ export default function PortfolioPage() {
       {tab === "holdings" && (
         <>
           {holdings.length === 0 ? (
-            <div className="text-center py-16">
-              <p className="text-4xl mb-4">📭</p>
-              <p className="text-zinc-400 font-medium">No holdings yet</p>
-              <p className="text-zinc-600 text-sm mt-1">
-                Add stocks, crypto, or commodities to track your portfolio
+            <div className="text-center py-20">
+              <p className="text-5xl mb-4">📭</p>
+              <p className="text-zinc-300 font-semibold text-lg">No holdings yet</p>
+              <p className="text-zinc-500 text-sm mt-2 max-w-xs mx-auto">
+                Add stocks, crypto, or commodities to track your portfolio performance
               </p>
               <button
                 onClick={() => setShowAdd(true)}
@@ -115,172 +106,125 @@ export default function PortfolioPage() {
             </div>
           ) : (
             <>
-              {/* Summary */}
-              <div className="rounded-2xl bg-zinc-900 dark:bg-zinc-900 light:bg-white border border-zinc-800 dark:border-zinc-800 light:border-gray-200 p-5 mb-5">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-zinc-500 text-xs mb-0.5">Total Value</p>
-                    <p className="text-white dark:text-white light:text-gray-900 text-xl font-bold">
-                      {formatCurrency(totalValue)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-zinc-500 text-xs mb-0.5">All-time P&L</p>
-                    <p
-                      className={`text-xl font-bold ${colorForChange(totalPnl)}`}
-                    >
-                      {totalPnl >= 0 ? "+" : ""}
-                      {formatCurrency(totalPnl)}
-                    </p>
-                    <p className={`text-xs ${colorForChange(totalPnlPct)}`}>
-                      {formatPercent(totalPnlPct)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-zinc-500 text-xs mb-0.5">Cost Basis</p>
-                    <p className="text-zinc-300 dark:text-zinc-300 light:text-gray-600 font-semibold">
-                      {formatCurrency(totalCost)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-zinc-500 text-xs mb-0.5">Holdings</p>
-                    <p className="text-zinc-300 dark:text-zinc-300 light:text-gray-600 font-semibold">
-                      {holdings.length}
-                    </p>
-                  </div>
+              {/* Summary stats */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+                <div className="rounded-xl bg-zinc-900 border border-zinc-800/60 p-4">
+                  <p className="text-zinc-500 text-xs mb-1">Total Value</p>
+                  <p className="text-white text-lg font-bold font-mono">{formatCurrency(totalValue)}</p>
+                </div>
+                <div className="rounded-xl bg-zinc-900 border border-zinc-800/60 p-4">
+                  <p className="text-zinc-500 text-xs mb-1">All-time P&amp;L</p>
+                  <p className={`text-lg font-bold font-mono ${colorForChange(totalPnl)}`}>
+                    {totalPnl >= 0 ? "+" : ""}{formatCurrency(totalPnl)}
+                  </p>
+                  <p className={`text-xs font-mono ${colorForChange(totalPnlPct)}`}>
+                    {formatPercent(totalPnlPct)}
+                  </p>
+                </div>
+                <div className="rounded-xl bg-zinc-900 border border-zinc-800/60 p-4">
+                  <p className="text-zinc-500 text-xs mb-1">Cost Basis</p>
+                  <p className="text-zinc-200 font-semibold font-mono">{formatCurrency(totalCost)}</p>
+                </div>
+                <div className="rounded-xl bg-zinc-900 border border-zinc-800/60 p-4">
+                  <p className="text-zinc-500 text-xs mb-1">Holdings</p>
+                  <p className="text-zinc-200 font-semibold text-2xl">{holdings.length}</p>
                 </div>
               </div>
 
-              {/* Allocation Chart */}
-              <AllocationChart holdings={enriched} />
+              {/* Chart + Holdings side by side on large screens */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-1">
+                  <AllocationChart holdings={enriched} />
+                </div>
 
-              {/* Holdings list */}
-              <div className="space-y-3 pb-6">
-                {enriched.map((h) => (
-                  <div
-                    key={h.symbol}
-                    className="rounded-xl bg-zinc-900 dark:bg-zinc-900 light:bg-white border border-zinc-800 dark:border-zinc-800 light:border-gray-200 overflow-hidden"
-                  >
-                    <button
-                      className="w-full p-4 text-left hover:bg-zinc-800 dark:hover:bg-zinc-800 light:hover:bg-gray-50 transition-colors"
-                      onClick={() => setSelectedSymbol(h.symbol)}
+                <div className="lg:col-span-2 space-y-3">
+                  {enriched.map((h) => (
+                    <div
+                      key={h.symbol}
+                      className="rounded-xl bg-zinc-900 border border-zinc-800/60 overflow-hidden"
                     >
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-white dark:text-white light:text-gray-900 font-bold">
-                              {h.symbol}
-                            </span>
-                            <span className="text-zinc-500 text-xs capitalize bg-zinc-800 dark:bg-zinc-800 light:bg-gray-100 px-1.5 py-0.5 rounded">
-                              {h.category}
-                            </span>
+                      <button
+                        className="w-full p-4 text-left hover:bg-zinc-800/40 transition-colors"
+                        onClick={() => openFundamentals(h.symbol)}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-white font-bold">{h.symbol}</span>
+                              <span className="text-zinc-500 text-xs capitalize bg-zinc-800 px-1.5 py-0.5 rounded">
+                                {h.category}
+                              </span>
+                            </div>
+                            <p className="text-zinc-500 text-xs mt-0.5">{h.name}</p>
                           </div>
-                          <p className="text-zinc-500 text-xs mt-0.5">
-                            {h.name}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-white dark:text-white light:text-gray-900 font-bold">
-                            {formatCurrency(h.currentValue ?? h.costBasis)}
-                          </p>
-                          {h.pnlPercent != null && (
-                            <p
-                              className={`text-sm font-semibold ${colorForChange(h.pnlPercent)}`}
-                            >
-                              {formatPercent(h.pnlPercent)}
+                          <div className="text-right">
+                            <p className="text-white font-bold font-mono">
+                              {formatCurrency(h.currentValue ?? h.costBasis)}
                             </p>
-                          )}
+                            {h.pnlPercent != null && (
+                              <p className={`text-sm font-semibold font-mono ${colorForChange(h.pnlPercent)}`}>
+                                {formatPercent(h.pnlPercent)}
+                              </p>
+                            )}
+                          </div>
                         </div>
-                      </div>
 
-                      <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-zinc-800 dark:border-zinc-800 light:border-gray-100">
-                        <div>
-                          <p className="text-zinc-600 text-xs">Qty</p>
-                          <p className="text-zinc-300 dark:text-zinc-300 light:text-gray-600 text-sm font-medium">
-                            {h.quantity}
-                          </p>
+                        <div className="grid grid-cols-3 md:grid-cols-6 gap-2 mt-3 pt-3 border-t border-zinc-800/60">
+                          {[
+                            { label: "Qty", value: String(h.quantity) },
+                            { label: "Avg Cost", value: formatCurrency(h.purchasePrice) },
+                            { label: "Current", value: h.currentPrice ? formatCurrency(h.currentPrice) : "—" },
+                            { label: "Cost Basis", value: formatCurrency(h.costBasis) },
+                            {
+                              label: "P&L $",
+                              value: h.pnl != null ? `${h.pnl >= 0 ? "+" : ""}${formatCurrency(h.pnl)}` : "—",
+                              color: colorForChange(h.pnl),
+                            },
+                            { label: "Today", value: h.changePercent != null ? formatPercent(h.changePercent) : "—", color: colorForChange(h.changePercent) },
+                          ].map(({ label, value, color }) => (
+                            <div key={label}>
+                              <p className="text-zinc-600 text-xs">{label}</p>
+                              <p className={`text-sm font-medium font-mono ${color ?? "text-zinc-300"}`}>{value}</p>
+                            </div>
+                          ))}
                         </div>
-                        <div>
-                          <p className="text-zinc-600 text-xs">Avg Cost</p>
-                          <p className="text-zinc-300 dark:text-zinc-300 light:text-gray-600 text-sm font-medium">
-                            {formatCurrency(h.purchasePrice)}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-zinc-600 text-xs">Current</p>
-                          <p
-                            className={`text-sm font-medium ${h.currentPrice ? "text-zinc-300 dark:text-zinc-300 light:text-gray-600" : "text-zinc-600"}`}
-                          >
-                            {h.currentPrice
-                              ? formatCurrency(h.currentPrice)
-                              : "—"}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-zinc-600 text-xs">Cost Basis</p>
-                          <p className="text-zinc-300 dark:text-zinc-300 light:text-gray-600 text-sm font-medium">
-                            {formatCurrency(h.costBasis)}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-zinc-600 text-xs">P&L $</p>
-                          <p
-                            className={`text-sm font-medium ${colorForChange(h.pnl)}`}
-                          >
-                            {h.pnl != null
-                              ? `${h.pnl >= 0 ? "+" : ""}${formatCurrency(h.pnl)}`
-                              : "—"}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-zinc-600 text-xs">Today</p>
-                          <p
-                            className={`text-sm font-medium ${colorForChange(h.changePercent)}`}
-                          >
-                            {h.changePercent != null
-                              ? formatPercent(h.changePercent)
-                              : "—"}
-                          </p>
-                        </div>
-                      </div>
-                      {h.purchaseDate && (
-                        <p className="text-zinc-600 text-xs mt-2">
-                          Purchased {h.purchaseDate}
-                        </p>
-                      )}
-                    </button>
+                        {h.purchaseDate && (
+                          <p className="text-zinc-600 text-xs mt-2">Purchased {h.purchaseDate}</p>
+                        )}
+                      </button>
 
-                    {/* Delete */}
-                    <div className="px-4 pb-3">
-                      {confirmDelete === h.symbol ? (
-                        <div className="flex gap-2">
+                      <div className="px-4 pb-3">
+                        {confirmDelete === h.symbol ? (
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => {
+                                removeHolding(h.symbol);
+                                toast(`${h.symbol} removed from portfolio`, "info");
+                                setConfirmDelete(null);
+                              }}
+                              className="flex-1 py-1.5 rounded-lg bg-red-600/20 border border-red-600/30 text-red-400 text-xs font-medium"
+                            >
+                              Confirm Remove
+                            </button>
+                            <button
+                              onClick={() => setConfirmDelete(null)}
+                              className="flex-1 py-1.5 rounded-lg bg-zinc-800 text-zinc-400 text-xs font-medium"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
                           <button
-                            onClick={() => {
-                              removeHolding(h.symbol);
-                              setConfirmDelete(null);
-                            }}
-                            className="flex-1 py-1.5 rounded-lg bg-red-600/20 border border-red-600/30 text-red-400 text-xs font-medium"
+                            onClick={() => setConfirmDelete(h.symbol)}
+                            className="w-full py-1.5 rounded-lg bg-zinc-800/60 text-zinc-500 text-xs font-medium hover:text-red-400 hover:bg-red-900/10 transition-colors"
                           >
-                            Confirm Remove
+                            Remove holding
                           </button>
-                          <button
-                            onClick={() => setConfirmDelete(null)}
-                            className="flex-1 py-1.5 rounded-lg bg-zinc-800 dark:bg-zinc-800 light:bg-gray-100 text-zinc-400 text-xs font-medium"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => setConfirmDelete(h.symbol)}
-                          className="w-full py-1.5 rounded-lg bg-zinc-800 dark:bg-zinc-800 light:bg-gray-100 text-zinc-500 text-xs font-medium hover:text-red-400 transition-colors"
-                        >
-                          Remove holding
-                        </button>
-                      )}
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </>
           )}
@@ -291,39 +235,32 @@ export default function PortfolioPage() {
       {tab === "watchlist" && (
         <div className="pb-6">
           {watchlist.length === 0 ? (
-            <div className="text-center py-16">
-              <p className="text-4xl mb-4">⭐</p>
-              <p className="text-zinc-400 font-medium">
-                Your watchlist is empty
-              </p>
-              <p className="text-zinc-600 text-sm mt-1">
+            <div className="text-center py-20">
+              <Star className="w-12 h-12 text-zinc-700 mx-auto mb-4" />
+              <p className="text-zinc-300 font-semibold text-lg">Watchlist is empty</p>
+              <p className="text-zinc-500 text-sm mt-2">
                 Search for assets and tap the star icon to add them
               </p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {watchlist.map((w) => {
                 const q = watchlistQuotes.find((q) => q.symbol === w.symbol);
                 return (
                   <div
                     key={w.symbol}
-                    className="rounded-xl bg-zinc-900 dark:bg-zinc-900 light:bg-white border border-zinc-800 dark:border-zinc-800 light:border-gray-200 overflow-hidden"
+                    className="rounded-xl bg-zinc-900 border border-zinc-800/60 overflow-hidden"
                   >
                     {q ? (
-                      <AssetCard
-                        quote={q}
-                        onClick={() => setSelectedSymbol(w.symbol)}
-                      />
+                      <AssetCard quote={q} onClick={() => openFundamentals(w.symbol)} />
                     ) : (
                       <button
-                        className="w-full p-4 text-left hover:bg-zinc-800 dark:hover:bg-zinc-800 light:hover:bg-gray-50 transition-colors"
-                        onClick={() => setSelectedSymbol(w.symbol)}
+                        className="w-full p-4 text-left hover:bg-zinc-800/40 transition-colors"
+                        onClick={() => openFundamentals(w.symbol)}
                       >
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-white dark:text-white light:text-gray-900 font-bold">
-                              {w.symbol}
-                            </p>
+                            <p className="text-white font-bold">{w.symbol}</p>
                             <p className="text-zinc-500 text-xs">{w.name}</p>
                           </div>
                           {wlLoading && (
@@ -334,8 +271,11 @@ export default function PortfolioPage() {
                     )}
                     <div className="px-4 pb-3">
                       <button
-                        onClick={() => removeFromWatchlist(w.symbol)}
-                        className="w-full py-1.5 rounded-lg bg-zinc-800 dark:bg-zinc-800 light:bg-gray-100 text-zinc-500 text-xs font-medium hover:text-yellow-400 transition-colors"
+                        onClick={() => {
+                          removeFromWatchlist(w.symbol);
+                          toast(`${w.symbol} removed from watchlist`, "info");
+                        }}
+                        className="w-full py-1.5 rounded-lg bg-zinc-800/60 text-zinc-500 text-xs font-medium hover:text-yellow-400 hover:bg-yellow-900/10 transition-colors"
                       >
                         Remove from watchlist
                       </button>
@@ -349,12 +289,6 @@ export default function PortfolioPage() {
       )}
 
       {showAdd && <AddHoldingModal onClose={() => setShowAdd(false)} />}
-      {selectedSymbol && (
-        <FundamentalsPanel
-          symbol={selectedSymbol}
-          onClose={() => setSelectedSymbol(null)}
-        />
-      )}
     </div>
   );
 }

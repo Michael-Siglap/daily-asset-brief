@@ -1,10 +1,16 @@
 import BottomNav from "@/components/BottomNav";
+import GlobalModals from "@/components/GlobalModals";
+import Sidebar from "@/components/Sidebar";
+import { ToastContainer } from "@/components/Toast";
 import { PortfolioProvider } from "@/context/PortfolioContext";
 import { SettingsProvider } from "@/context/SettingsContext";
+import { ToastProvider } from "@/context/ToastContext";
+import { UIProvider } from "@/context/UIContext";
 import type { Metadata, Viewport } from "next";
-import { Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
+const sans = Geist({ subsets: ["latin"], variable: "--font-sans" });
 const mono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" });
 
 export const metadata: Metadata = {
@@ -39,16 +45,28 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body
-        className={`${mono.variable} font-mono bg-zinc-950 dark:bg-zinc-950 light:bg-gray-50 text-white dark:text-white light:text-gray-900 antialiased`}
+        className={`${sans.variable} ${mono.variable} font-sans bg-zinc-950 text-white antialiased`}
       >
-        <SettingsProvider>
-          <PortfolioProvider>
-            <main className="min-h-screen max-w-lg mx-auto pb-24">
-              {children}
-            </main>
-            <BottomNav />
-          </PortfolioProvider>
-        </SettingsProvider>
+        <ToastProvider>
+          <UIProvider>
+            <SettingsProvider>
+              <PortfolioProvider>
+                <div className="flex min-h-screen">
+                  <Sidebar />
+                  {/* Main content — offset by sidebar on md+ */}
+                  <div className="flex-1 min-w-0 md:ml-16 lg:ml-60">
+                    <main className="min-h-screen pb-20 md:pb-8">
+                      {children}
+                    </main>
+                  </div>
+                </div>
+                <BottomNav />
+                <GlobalModals />
+                <ToastContainer />
+              </PortfolioProvider>
+            </SettingsProvider>
+          </UIProvider>
+        </ToastProvider>
       </body>
     </html>
   );

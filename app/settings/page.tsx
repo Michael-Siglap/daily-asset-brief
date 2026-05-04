@@ -1,6 +1,8 @@
 "use client";
 import { usePortfolio } from "@/context/PortfolioContext";
 import { useSettings } from "@/context/SettingsContext";
+import { useToast } from "@/context/ToastContext";
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -34,15 +36,15 @@ function SegmentedControl<T extends string | number>({
   onChange: (v: T) => void;
 }) {
   return (
-    <div className="flex gap-1 bg-zinc-800 dark:bg-zinc-800 light:bg-gray-100 rounded-xl p-1">
+    <div className="flex gap-1 bg-zinc-800/60 rounded-xl p-1">
       {options.map((opt) => (
         <button
           key={String(opt.value)}
           onClick={() => onChange(opt.value)}
-          className={`flex-1 py-1.5 px-3 rounded-lg text-sm font-medium transition-colors ${
+          className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
             value === opt.value
-              ? "bg-zinc-900 dark:bg-zinc-900 light:bg-white text-white dark:text-white light:text-gray-900 shadow"
-              : "text-zinc-400 dark:text-zinc-400 light:text-gray-500 hover:text-white dark:hover:text-white light:hover:text-gray-900"
+              ? "bg-zinc-900 text-white shadow"
+              : "text-zinc-400 hover:text-zinc-200"
           }`}
         >
           {opt.label}
@@ -52,186 +54,193 @@ function SegmentedControl<T extends string | number>({
   );
 }
 
+function Section({
+  title,
+  children,
+  danger,
+}: {
+  title: string;
+  children: React.ReactNode;
+  danger?: boolean;
+}) {
+  return (
+    <section
+      className={`rounded-2xl border p-5 ${
+        danger
+          ? "bg-zinc-900 border-red-900/40"
+          : "bg-zinc-900 border-zinc-800/60"
+      }`}
+    >
+      <h2
+        className={`text-xs uppercase tracking-wider mb-4 font-semibold ${
+          danger ? "text-red-500" : "text-zinc-400"
+        }`}
+      >
+        {title}
+      </h2>
+      {children}
+    </section>
+  );
+}
+
 export default function SettingsPage() {
-  const { settings, setTheme, setAutoRefreshInterval, setCurrency } =
-    useSettings();
+  const { settings, setTheme, setAutoRefreshInterval, setCurrency } = useSettings();
   const { holdings, watchlist } = usePortfolio();
-  const [confirmClear, setConfirmClear] = useState<
-    "portfolio" | "watchlist" | null
-  >(null);
+  const { toast } = useToast();
+  const [confirmClear, setConfirmClear] = useState<"portfolio" | "watchlist" | null>(null);
 
   function clearPortfolio() {
     localStorage.setItem("dab_portfolio", "[]");
+    toast("Portfolio cleared", "info");
     window.location.reload();
   }
 
   function clearWatchlist() {
     localStorage.setItem("dab_watchlist", "[]");
+    toast("Watchlist cleared", "info");
     window.location.reload();
   }
 
   return (
-    <main className="min-h-screen bg-zinc-950 dark:bg-zinc-950 light:bg-gray-50 pb-24 px-4 pt-6 max-w-lg mx-auto">
+    <div className="px-4 md:px-6 lg:px-8 pt-8 pb-8 max-w-2xl mx-auto">
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <Link
           href="/"
-          className="text-zinc-400 hover:text-white dark:hover:text-white light:hover:text-gray-900 transition-colors"
+          className="md:hidden text-zinc-400 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-zinc-800"
+          aria-label="Back"
         >
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 19l-7-7 7-7"
-            />
-          </svg>
+          <ArrowLeft className="w-5 h-5" />
         </Link>
-        <h1 className="text-white dark:text-white light:text-gray-900 text-xl font-bold">
-          Settings
-        </h1>
+        <h1 className="text-white text-2xl font-bold">Settings</h1>
       </div>
 
       <div className="space-y-4">
         {/* Appearance */}
-        <section className="bg-zinc-900 dark:bg-zinc-900 light:bg-white border border-zinc-800 dark:border-zinc-800 light:border-gray-200 rounded-2xl p-4">
-          <h2 className="text-zinc-400 dark:text-zinc-400 light:text-gray-500 text-xs uppercase tracking-wider mb-3">
-            Appearance
-          </h2>
-          <div className="space-y-1 mb-3">
-            <span className="text-white dark:text-white light:text-gray-900 text-sm">
-              Theme
-            </span>
+        <Section title="Appearance">
+          <div className="space-y-3">
+            <div>
+              <p className="text-white text-sm font-medium mb-2">Theme</p>
+              <SegmentedControl options={THEME_OPTIONS} value={settings.theme} onChange={setTheme} />
+            </div>
           </div>
-          <SegmentedControl
-            options={THEME_OPTIONS}
-            value={settings.theme}
-            onChange={setTheme}
-          />
-        </section>
+        </Section>
 
-        {/* Auto Refresh */}
-        <section className="bg-zinc-900 dark:bg-zinc-900 light:bg-white border border-zinc-800 dark:border-zinc-800 light:border-gray-200 rounded-2xl p-4">
-          <h2 className="text-zinc-400 dark:text-zinc-400 light:text-gray-500 text-xs uppercase tracking-wider mb-3">
-            Data
-          </h2>
-          <div className="mb-3">
-            <span className="text-white dark:text-white light:text-gray-900 text-sm">
-              Auto-Refresh
-            </span>
-            <p className="text-zinc-500 text-xs mt-0.5">
-              How often to fetch fresh prices
-            </p>
+        {/* Data */}
+        <Section title="Data">
+          <div className="space-y-4">
+            <div>
+              <p className="text-white text-sm font-medium">Auto-Refresh</p>
+              <p className="text-zinc-500 text-xs mt-0.5 mb-2">How often to fetch fresh prices</p>
+              <SegmentedControl
+                options={REFRESH_OPTIONS}
+                value={settings.autoRefreshInterval}
+                onChange={setAutoRefreshInterval}
+              />
+            </div>
           </div>
-          <SegmentedControl
-            options={REFRESH_OPTIONS}
-            value={settings.autoRefreshInterval}
-            onChange={setAutoRefreshInterval}
-          />
-        </section>
+        </Section>
 
         {/* Currency */}
-        <section className="bg-zinc-900 dark:bg-zinc-900 light:bg-white border border-zinc-800 dark:border-zinc-800 light:border-gray-200 rounded-2xl p-4">
-          <h2 className="text-zinc-400 dark:text-zinc-400 light:text-gray-500 text-xs uppercase tracking-wider mb-3">
-            Currency
-          </h2>
-          <div className="mb-3">
-            <span className="text-white dark:text-white light:text-gray-900 text-sm">
-              Display Currency
-            </span>
-            <p className="text-zinc-500 text-xs mt-0.5">
-              Prices and portfolio values will be converted
-            </p>
+        <Section title="Currency">
+          <div>
+            <p className="text-white text-sm font-medium">Display Currency</p>
+            <p className="text-zinc-500 text-xs mt-0.5 mb-2">Prices and portfolio values will be converted</p>
+            <SegmentedControl
+              options={CURRENCY_OPTIONS}
+              value={settings.currency}
+              onChange={setCurrency}
+            />
           </div>
-          <SegmentedControl
-            options={CURRENCY_OPTIONS}
-            value={settings.currency}
-            onChange={setCurrency}
-          />
-        </section>
+        </Section>
+
+        {/* About */}
+        <Section title="About">
+          <div className="space-y-3">
+            <div className="flex justify-between items-center py-2 border-b border-zinc-800/60">
+              <span className="text-zinc-400 text-sm">App</span>
+              <span className="text-white text-sm font-medium">Daily Asset Brief</span>
+            </div>
+            <div className="flex justify-between items-center py-2 border-b border-zinc-800/60">
+              <span className="text-zinc-400 text-sm">Data source</span>
+              <span className="text-white text-sm font-medium">Yahoo Finance</span>
+            </div>
+            <div className="flex justify-between items-center py-2">
+              <span className="text-zinc-400 text-sm">Market hours</span>
+              <span className="text-white text-sm font-medium">9:30 AM – 4:00 PM ET</span>
+            </div>
+          </div>
+        </Section>
 
         {/* Danger Zone */}
-        <section className="bg-zinc-900 dark:bg-zinc-900 light:bg-white border border-red-900/40 rounded-2xl p-4">
-          <h2 className="text-red-500 text-xs uppercase tracking-wider mb-3">
-            Danger Zone
-          </h2>
-
-          {/* Clear portfolio */}
-          <div className="flex items-center justify-between py-3 border-b border-zinc-800 dark:border-zinc-800 light:border-gray-100">
-            <div>
-              <p className="text-white dark:text-white light:text-gray-900 text-sm">
-                Clear Portfolio
-              </p>
-              <p className="text-zinc-500 text-xs">
-                {holdings.length} holding{holdings.length !== 1 ? "s" : ""}
-              </p>
-            </div>
-            {confirmClear === "portfolio" ? (
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setConfirmClear(null)}
-                  className="text-zinc-400 text-sm px-3 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={clearPortfolio}
-                  className="text-white text-sm px-3 py-1 rounded-lg bg-red-600 hover:bg-red-700 transition-colors"
-                >
-                  Confirm
-                </button>
+        <Section title="Danger Zone" danger>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-white text-sm font-medium">Clear Portfolio</p>
+                <p className="text-zinc-500 text-xs">
+                  {holdings.length} holding{holdings.length !== 1 ? "s" : ""}
+                </p>
               </div>
-            ) : (
-              <button
-                onClick={() => setConfirmClear("portfolio")}
-                className="text-red-400 text-sm px-3 py-1 rounded-lg bg-red-900/20 hover:bg-red-900/40 transition-colors"
-              >
-                Clear
-              </button>
-            )}
-          </div>
-
-          {/* Clear watchlist */}
-          <div className="flex items-center justify-between pt-3">
-            <div>
-              <p className="text-white dark:text-white light:text-gray-900 text-sm">
-                Clear Watchlist
-              </p>
-              <p className="text-zinc-500 text-xs">
-                {watchlist.length} item{watchlist.length !== 1 ? "s" : ""}
-              </p>
+              {confirmClear === "portfolio" ? (
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setConfirmClear(null)}
+                    className="text-zinc-400 text-sm px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={clearPortfolio}
+                    className="text-white text-sm px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 transition-colors"
+                  >
+                    Confirm
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setConfirmClear("portfolio")}
+                  className="text-red-400 text-sm px-3 py-1.5 rounded-lg bg-red-900/20 hover:bg-red-900/40 transition-colors"
+                >
+                  Clear
+                </button>
+              )}
             </div>
-            {confirmClear === "watchlist" ? (
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setConfirmClear(null)}
-                  className="text-zinc-400 text-sm px-3 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={clearWatchlist}
-                  className="text-white text-sm px-3 py-1 rounded-lg bg-red-600 hover:bg-red-700 transition-colors"
-                >
-                  Confirm
-                </button>
+
+            <div className="flex items-center justify-between pt-3 border-t border-zinc-800/60">
+              <div>
+                <p className="text-white text-sm font-medium">Clear Watchlist</p>
+                <p className="text-zinc-500 text-xs">
+                  {watchlist.length} item{watchlist.length !== 1 ? "s" : ""}
+                </p>
               </div>
-            ) : (
-              <button
-                onClick={() => setConfirmClear("watchlist")}
-                className="text-red-400 text-sm px-3 py-1 rounded-lg bg-red-900/20 hover:bg-red-900/40 transition-colors"
-              >
-                Clear
-              </button>
-            )}
+              {confirmClear === "watchlist" ? (
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setConfirmClear(null)}
+                    className="text-zinc-400 text-sm px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={clearWatchlist}
+                    className="text-white text-sm px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 transition-colors"
+                  >
+                    Confirm
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setConfirmClear("watchlist")}
+                  className="text-red-400 text-sm px-3 py-1.5 rounded-lg bg-red-900/20 hover:bg-red-900/40 transition-colors"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
           </div>
-        </section>
+        </Section>
       </div>
-    </main>
+    </div>
   );
 }
